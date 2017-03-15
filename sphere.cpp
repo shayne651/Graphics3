@@ -39,23 +39,31 @@ Hit Sphere::intersect(const Ray &ray)
     ****************************************************/
 
     // place holder for actual intersection calculation
+    double t;
+    double a =(ray.D.dot(ray.D));
+    double b =2*(ray.D.dot(ray.O-position));
+    double c =(ray.O-position).dot(ray.O-position)-pow(r,2);
+    double delta = pow(b,2)-4*(a*c);
 
-    Vector OC = (position - ray.O).normalized();
-    if (OC.dot(ray.D) < 0.999) {
+    if (delta <0) {
         return Hit::NO_HIT();
+    }else if (delta == 0){
+        t= -(b/2*a);
+        Vector N = (ray.at(t)-position).normalized();
+        return Hit(t,N);
+    }else{
+        delta = sqrt(delta);
+        double r1=(-b+delta)/2*a;
+        double r2= (-b-delta)/2*a;
+        if (r1>r2){
+            t=r2;
+            Vector N = (ray.at(t)-position).normalized();
+            return Hit(t,N);
+        }else{
+            t=r1;
+            Vector N = (ray.at(t)-position).normalized();
+            return Hit(t,N);
+        }
     }
-    double t = 1000;
-
-    /****************************************************
-    * RT1.2: NORMAL CALCULATION
-    *
-    * Given: t, C, r
-    * Sought: N
-    * 
-    * Insert calculation of the sphere's normal at the intersection point.
-    ****************************************************/
-
-    Vector N /* = ... */;
-
-    return Hit(t,N);
+    return Hit::NO_HIT();
 }
