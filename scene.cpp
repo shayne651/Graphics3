@@ -56,10 +56,15 @@ Color Scene::trace(const Ray &ray)
     *        Color*Color        dito
     *        pow(a,b)           a to the power of b
     ****************************************************/
+    N.normalize();
+    V.normalize();
+    Color holder = N.dot(ray.D) * material->color;
+    Color diffuse = material->kd * holder ;
+
 
     Color color = material->color;                  // place holder
 
-    return color;
+    return diffuse;
 }
 
 void Scene::render(Image &img)
