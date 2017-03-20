@@ -58,11 +58,10 @@ Color Scene::trace(const Ray &ray)
     ****************************************************/
     N.normalize();
     V.normalize();
-    Color holder = N.dot(ray.D) * material->color;
-    Color diffuse = material->kd * holder ;
+    double holder = N.dot(V);
+    Color diffuse = material->kd * lights[0]->color * holder * material->color;
 
 
-    Color color = material->color;                  // place holder
 
     return diffuse;
 }
