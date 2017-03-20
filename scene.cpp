@@ -20,6 +20,7 @@
 Color Scene::trace(const Ray &ray)
 {
     // Find hit object and distance
+    bool shadows = false;
     Hit min_hit(std::numeric_limits<double>::infinity(),Vector());
     Object *obj = NULL;
     for (unsigned int i = 0; i < objects.size(); ++i) {
@@ -58,13 +59,19 @@ Color Scene::trace(const Ray &ray)
     ****************************************************/
     N.normalize();
     V.normalize();
-    double holder = N.dot(V);
-    Color diffuse = material->kd * lights[0]->color * holder * material->color;
-    Color ambient = lights[0]->color * material->ka;
-    Color spec =(lights[0]->color * V * material->ks);
-    Color total = diffuse;
+    Color diffuse;
+    Color ambient = material->color * material->ka;
+    Color spec;
+    Color total;
 
-    return total;
+    for(int i =0; i <=lights.size()-1;i++){
+    	double holder = max(0.0,N.dot((lights[i]->position-hit).normalized()));
+    	diffuse = material->kd * lights[i]->color * holder * material->color;
+    	spec =(lights[i]->color * material->ks)*pow(V.dot(N),material->n);
+    	total = diffuse + spec;
+    }
+
+    return total+ambient;
 }
 
 void Scene::render(Image &img)
