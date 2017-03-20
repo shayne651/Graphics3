@@ -60,10 +60,11 @@ Color Scene::trace(const Ray &ray)
     V.normalize();
     double holder = N.dot(V);
     Color diffuse = material->kd * lights[0]->color * holder * material->color;
+    Color ambient = lights[0]->color * material->ka;
+    Color spec =(lights[0]->color * V * material->ks);
+    Color total = diffuse;
 
-
-
-    return diffuse;
+    return total;
 }
 
 void Scene::render(Image &img)
