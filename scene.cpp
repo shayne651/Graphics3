@@ -17,7 +17,7 @@
 #include "scene.h"
 #include "material.h"
 
-Color Scene::trace(const Ray &ray)
+Color Scene::trace(const Ray &ray , int depth)
 {
     // Find hit object and distance
     Hit min_hit(std::numeric_limits<double>::infinity(),Vector());
@@ -58,46 +58,64 @@ Color Scene::trace(const Ray &ray)
     ****************************************************/
     N.normalize();
     V.normalize();
-    Color diffuse;
+    //ambient calc
     Color ambient = material->color * material->ka;
-    Color spec;
-    Color total;
+    Color total = ambient;
     bool isShadow=false;
 
     for(unsigned int i =0; i < lights.size();i++){
-        Hit min_hit(std::numeric_limits<double>::infinity(),Vector());
-        Ray shadows(hit,lights[i]->position-hit);
-        for (unsigned int x = 0; x < objects.size(); ++x) {
-            Hit hit(objects[x]->intersect(shadows));
-            if (hit.t<min_hit.t) {
+        //finding the shadows
+        Ray shadows(hit,(lights[i]->position-hit).normalized());
+        Point jiggle = shadows.at(0.001);
+        //jiggling the poitns to get rid of the black dots
+        shadows = Ray(jiggle,(lights[i]->position-hit).normalized());
+        for (unsigned int x = 0; x < objects.size(); x++) {
+            Hit lhit(objects[x]->intersect(shadows));
+            if (lhit.t<min_hit.t) {
                 isShadow = true;
+                //if true break the loop and set isShadow to true 
+                break;
             }
         }
         if(isShadow){
-            return ambient;
+            //skips the phong calc if it is in a shadow
+            
         }else{
-            for(unsigned int i =0;i < lights.size();i++){
-                double holder = max(0.0,N.dot((lights[i]->position-hit).normalized()));
-                diffuse = material->kd * lights[i]->color * holder * material->color;
-                spec =(lights[i]->color * material->ks)*pow(V.dot(N),material->n);
+                Vector hpoint = (lights[i]->position-hit).normalized();
+                Vector newV =(V + hpoint).normalized();
+                //diffuse calc
+                double holder = max(0.0,N.dot(hpoint));
+                Color diffuse = material->kd * lights[i]->color * holder * material->color;
+                //specular calc
+                Color spec1 =lights[i]->color * material->ks;
+                holder = newV.dot(N);
+                Color spec =spec1*pow(holder,4* material->n);
+                //adds spec + diffuse to the final color to be returned
                 total += diffuse + spec;
-            }
-            return total+ambient;
         }
-        
     }
-    return ambient;
+
+    //checks to see if the surface can reflect and if the max ray jumps has been met
+    if(material->reflect!=0 && depth < 10){
+        //ray dir calc (needed to be jiggled too)
+        Vector dir = ray.D - 2 * (ray.D.dot(N))*N;
+        Ray reflect(hit + 0.001, dir);
+        //recursivly follows the ray
+        total += trace(reflect, depth++)* material->reflect;
+    }
+    //returns all of phong added together
+    return total;
 }
 
 void Scene::render(Image &img)
-{
-    int w = img.width();
+{ 
+   int w = img.width();
     int h = img.height();
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
             Point pixel(x, h-1-y, 0);
             Ray ray(eye, (pixel-eye).normalized());
-            Color col = trace(ray);
+            Color col = trace(ray,0);
             col.clamp();
             img(x,y) = col;
         }

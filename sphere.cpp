@@ -48,22 +48,22 @@ Hit Sphere::intersect(const Ray &ray)
         return Hit::NO_HIT();
     }else if (delta == 0){
         t= -(b/2*a);
-        Vector N = (ray.at(t)-position).normalized();
+        Vector N = ((ray.O + ray.D * t) - position)/r;
         return Hit(t,N);
     }else{
         delta = sqrt(delta);
         double r1=(-b+delta)/2*a;
         double r2= (-b-delta)/2*a;
-        if (r1<0 || r2 <0){
+        if (r1<0 && r2 <0){
             return Hit::NO_HIT();
         }
         if (r1>r2){
             t=r2;
-            Vector N = (ray.at(t)-position).normalized();
+            Vector N = ((ray.O + ray.D * t) - position)/r;
             return Hit(t,N);
         }else{
             t=r1;
-            Vector N = (ray.at(t)-position).normalized();
+            Vector N = ((ray.O + ray.D * t) - position)/r;
             return Hit(t,N);
         }
     }

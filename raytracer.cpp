@@ -51,9 +51,9 @@ Material* Raytracer::parseMaterial(const YAML::Node& node)
     node["kd"] >> m->kd;
     node["ks"] >> m->ks;
     node["n"] >> m->n;
-    // node["reflect"] >> m->reflect;
-    // node["refract"] >> m->refract;
-    // node["eta"] >> m->eta;
+    node["reflect"] >> m->reflect;
+    node["refract"] >> m->refract;
+    node["eta"] >> m->eta;
     return m;
 }
 
