@@ -57,11 +57,9 @@ Color Scene::trace(const Ray &ray , int depth)
     *        pow(a,b)           a to the power of b
     ****************************************************/
     N.normalize();
-    V.normalize();
     //ambient calc
     Color ambient = material->color * material->ka;
     Color total = ambient;
-    bool isShadow=false;
 
     for(unsigned int i =0; i < lights.size();i++){
         //finding the shadows
@@ -69,6 +67,7 @@ Color Scene::trace(const Ray &ray , int depth)
         Point jiggle = shadows.at(0.001);
         //jiggling the poitns to get rid of the black dots
         shadows = Ray(jiggle,(lights[i]->position-hit).normalized());
+    	bool isShadow=false;
         for (unsigned int x = 0; x < objects.size(); x++) {
             Hit lhit(objects[x]->intersect(shadows));
             if (lhit.t<min_hit.t) {
@@ -77,10 +76,11 @@ Color Scene::trace(const Ray &ray , int depth)
                 break;
             }
         }
-        if(isShadow){
+        if(isShadow) continue;
             //skips the phong calc if it is in a shadow
+            //total = total;
             
-        }else{
+        
                 Vector hpoint = (lights[i]->position-hit).normalized();
                 Vector newV =(V + hpoint).normalized();
                 //diffuse calc
@@ -92,14 +92,14 @@ Color Scene::trace(const Ray &ray , int depth)
                 Color spec =spec1*pow(holder,4* material->n);
                 //adds spec + diffuse to the final color to be returned
                 total += diffuse + spec;
-        }
+        
     }
 
     //checks to see if the surface can reflect and if the max ray jumps has been met
-    if(material->reflect!=0 && depth < 10){
+    if(material->reflect!=0 && depth < 100){
         //ray dir calc (needed to be jiggled too)
         Vector dir = ray.D - 2 * (ray.D.dot(N))*N;
-        Ray reflect(hit + 0.001, dir);
+        Ray reflect(hit + N*0.001, dir);
         //recursivly follows the ray
         total += trace(reflect, depth++)* material->reflect;
     }
